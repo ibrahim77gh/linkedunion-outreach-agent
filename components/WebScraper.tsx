@@ -471,35 +471,13 @@ export const WebScraper = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Textarea
-              value={deepSearchResults.results}
-              readOnly
-              className="min-h-[400px] font-mono text-sm"
-              placeholder="Deep search results will appear here..."
+            <MarkdownRenderer
+              handleParseAndSave={handleParseAndSave}
+              unionSearchResults={deepSearchResults}
+              content={deepSearchResults.results}
+              isParsing={isParsing}
+              className="h-fit"
             />
-            {deepSearchResults.sources.length > 0 && (
-              <div className="space-y-2">
-                <Label>Sources:</Label>
-                <div className="space-y-1">
-                  {deepSearchResults.sources.map((source, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-2 text-sm"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      <a
-                        href={source.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
-                        {source.title || source.url}
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
       )}
