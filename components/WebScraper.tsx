@@ -1,46 +1,60 @@
-"use client"
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Progress } from "@/components/ui/progress"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
-import { Globe, Search, Users, Building, ExternalLink } from "lucide-react"
-import { MarkdownRenderer } from "@/components/markdown-renderer"
-import { UnionDataTable } from "@/components/union-data-table"
-import type { Union } from "@/lib/supabase"
+"use client";
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Globe, Search, Users, Building, ExternalLink } from "lucide-react";
+import { MarkdownRenderer } from "@/components/markdown-renderer";
+import { UnionDataTable } from "@/components/union-data-table";
+import type { Union } from "@/lib/supabase";
 
-interface SearchResult {
-  results: string
-  sources: Array<{ url: string; title?: string }>
-  searchQuery: string
-  unionName?: string
+export interface SearchResult {
+  results: string;
+  sources: Array<{ url: string; title?: string }>;
+  searchQuery: string;
+  unionName?: string;
 }
 
 export const WebScraper = () => {
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   // Union Search State
-  const [country, setCountry] = useState("US")
-  const [state, setState] = useState("")
-  const [unionType, setUnionType] = useState("")
-  const [industry, setIndustry] = useState("")
-  const [isSearchingUnions, setIsSearchingUnions] = useState(false)
-  const [unionSearchResults, setUnionSearchResults] = useState<SearchResult | null>(null)
+  const [country, setCountry] = useState("US");
+  const [state, setState] = useState("");
+  const [unionType, setUnionType] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [isSearchingUnions, setIsSearchingUnions] = useState(false);
+  const [unionSearchResults, setUnionSearchResults] =
+    useState<SearchResult | null>(null);
 
   // Deep Search State
-  const [unionName, setUnionName] = useState("")
-  const [unionWebsite, setUnionWebsite] = useState("")
-  const [isDeepSearching, setIsDeepSearching] = useState(false)
-  const [deepSearchResults, setDeepSearchResults] = useState<SearchResult | null>(null)
+  const [unionName, setUnionName] = useState("");
+  const [unionWebsite, setUnionWebsite] = useState("");
+  const [isDeepSearching, setIsDeepSearching] = useState(false);
+  const [deepSearchResults, setDeepSearchResults] =
+    useState<SearchResult | null>(null);
 
-  const [searchProgress, setSearchProgress] = useState(0)
+  const [searchProgress, setSearchProgress] = useState(0);
 
-  const [parsedUnions, setParsedUnions] = useState<Union[]>([])
-  const [isParsing, setIsParsing] = useState(false)
+  const [parsedUnions, setParsedUnions] = useState<Union[]>([]);
+  const [isParsing, setIsParsing] = useState(false);
 
   const handleUnionSearch = async () => {
     if (!state) {
@@ -48,25 +62,25 @@ export const WebScraper = () => {
         title: "Error",
         description: "Please select a state to search for unions",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsSearchingUnions(true)
-    setUnionSearchResults(null)
-    setSearchProgress(0)
+    setIsSearchingUnions(true);
+    setUnionSearchResults(null);
+    setSearchProgress(0);
 
     try {
       // Progress simulation
       const progressInterval = setInterval(() => {
         setSearchProgress((prev) => {
           if (prev >= 90) {
-            clearInterval(progressInterval)
-            return 90
+            clearInterval(progressInterval);
+            return 90;
           }
-          return prev + 10
-        })
-      }, 500)
+          return prev + 10;
+        });
+      }, 500);
 
       const response = await fetch("/api/search-unions", {
         method: "POST",
@@ -79,32 +93,32 @@ export const WebScraper = () => {
           unionType,
           industry,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
-      clearInterval(progressInterval)
-      setSearchProgress(100)
+      clearInterval(progressInterval);
+      setSearchProgress(100);
 
       if (data.success) {
-        setUnionSearchResults(data)
+        setUnionSearchResults(data);
         toast({
           title: "Search Complete",
           description: `Found union information for ${state}`,
-        })
+        });
       } else {
-        throw new Error(data.error)
+        throw new Error(data.error);
       }
     } catch (error) {
       toast({
         title: "Search Failed",
         description: "Unable to search for unions. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSearchingUnions(false)
+      setIsSearchingUnions(false);
     }
-  }
+  };
 
   const handleDeepSearch = async () => {
     if (!unionName) {
@@ -112,25 +126,25 @@ export const WebScraper = () => {
         title: "Error",
         description: "Please enter a union name for deep search",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsDeepSearching(true)
-    setDeepSearchResults(null)
-    setSearchProgress(0)
+    setIsDeepSearching(true);
+    setDeepSearchResults(null);
+    setSearchProgress(0);
 
     try {
       // Progress simulation
       const progressInterval = setInterval(() => {
         setSearchProgress((prev) => {
           if (prev >= 90) {
-            clearInterval(progressInterval)
-            return 90
+            clearInterval(progressInterval);
+            return 90;
           }
-          return prev + 8
-        })
-      }, 600)
+          return prev + 8;
+        });
+      }, 600);
 
       const response = await fetch("/api/deep-search-union", {
         method: "POST",
@@ -141,35 +155,35 @@ export const WebScraper = () => {
           unionName,
           website: unionWebsite,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
-      clearInterval(progressInterval)
-      setSearchProgress(100)
+      clearInterval(progressInterval);
+      setSearchProgress(100);
 
       if (data.success) {
-        setDeepSearchResults(data)
+        setDeepSearchResults(data);
         toast({
           title: "Deep Search Complete",
           description: `Found detailed information for ${unionName}`,
-        })
+        });
       } else {
-        throw new Error(data.error)
+        throw new Error(data.error);
       }
     } catch (error) {
       toast({
         title: "Deep Search Failed",
         description: "Unable to perform deep search. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsDeepSearching(false)
+      setIsDeepSearching(false);
     }
-  }
+  };
 
   const handleParseAndSave = async (searchResults: SearchResult) => {
-    setIsParsing(true)
+    setIsParsing(true);
     try {
       const response = await fetch("/api/parse-unions", {
         method: "POST",
@@ -186,29 +200,29 @@ export const WebScraper = () => {
             sources: searchResults.sources,
           },
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
-        setParsedUnions(data.parsedUnions)
+        setParsedUnions(data.parsedUnions);
         toast({
           title: "Data Parsed & Saved",
           description: `Successfully parsed and saved ${data.parsedUnions.length} unions to database`,
-        })
+        });
       } else {
-        throw new Error(data.error)
+        throw new Error(data.error);
       }
     } catch (error) {
       toast({
         title: "Parse Failed",
         description: "Unable to parse and save union data. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsParsing(false)
+      setIsParsing(false);
     }
-  }
+  };
 
   const usStates = [
     "Alabama",
@@ -261,7 +275,7 @@ export const WebScraper = () => {
     "West Virginia",
     "Wisconsin",
     "Wyoming",
-  ]
+  ];
 
   const canadianProvinces = [
     "Alberta",
@@ -277,7 +291,7 @@ export const WebScraper = () => {
     "Quebec",
     "Saskatchewan",
     "Yukon",
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -289,7 +303,9 @@ export const WebScraper = () => {
               <Users className="w-5 h-5" />
               <span>Search Unions by Location</span>
             </CardTitle>
-            <CardDescription>Find unions in a specific location with contact information</CardDescription>
+            <CardDescription>
+              Find unions in a specific location with contact information
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -312,11 +328,13 @@ export const WebScraper = () => {
                     <SelectValue placeholder="Select state/province" />
                   </SelectTrigger>
                   <SelectContent>
-                    {(country === "US" ? usStates : canadianProvinces).map((location) => (
-                      <SelectItem key={location} value={location}>
-                        {location}
-                      </SelectItem>
-                    ))}
+                    {(country === "US" ? usStates : canadianProvinces).map(
+                      (location) => (
+                        <SelectItem key={location} value={location}>
+                          {location}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -360,7 +378,9 @@ export const WebScraper = () => {
               className="w-full flex items-center space-x-2"
             >
               <Search className="w-4 h-4" />
-              <span>{isSearchingUnions ? "Searching..." : "Search Unions"}</span>
+              <span>
+                {isSearchingUnions ? "Searching..." : "Search Unions"}
+              </span>
             </Button>
           </CardContent>
         </Card>
@@ -371,7 +391,9 @@ export const WebScraper = () => {
               <Building className="w-5 h-5" />
               <span>Deep Search on Union</span>
             </CardTitle>
-            <CardDescription>Get detailed information about a specific union</CardDescription>
+            <CardDescription>
+              Get detailed information about a specific union
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -412,7 +434,9 @@ export const WebScraper = () => {
               className="w-full flex items-center space-x-2"
             >
               <Search className="w-4 h-4" />
-              <span>{isDeepSearching ? "Deep Searching..." : "Deep Search Union"}</span>
+              <span>
+                {isDeepSearching ? "Deep Searching..." : "Deep Search Union"}
+              </span>
             </Button>
           </CardContent>
         </Card>
@@ -421,45 +445,14 @@ export const WebScraper = () => {
       {/* Search Results */}
       {unionSearchResults && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <MarkdownRenderer content={unionSearchResults.results} className="h-fit" />
-            <Card>
-              <CardHeader>
-                <CardTitle>Search Actions</CardTitle>
-                <CardDescription>Parse and save the search results</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button
-                  onClick={() => handleParseAndSave(unionSearchResults)}
-                  disabled={isParsing}
-                  className="w-full flex items-center space-x-2"
-                >
-                  <Search className="w-4 h-4" />
-                  <span>{isParsing ? "Parsing & Saving..." : "Parse & Save to Database"}</span>
-                </Button>
-
-                {unionSearchResults.sources.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Sources:</Label>
-                    <div className="space-y-1">
-                      {unionSearchResults.sources.map((source, index) => (
-                        <div key={index} className="flex items-center space-x-2 text-sm">
-                          <ExternalLink className="w-3 h-3" />
-                          <a
-                            href={source.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            {source.title || source.url}
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1">
+            <MarkdownRenderer
+              handleParseAndSave={handleParseAndSave}
+              unionSearchResults={unionSearchResults}
+              content={unionSearchResults.results}
+              isParsing={isParsing}
+              className="h-fit"
+            />
           </div>
 
           <UnionDataTable unions={parsedUnions} isLoading={isParsing} />
@@ -473,7 +466,9 @@ export const WebScraper = () => {
               <Building className="w-5 h-5" />
               <span>Deep Search Results</span>
             </CardTitle>
-            <CardDescription>Detailed information for {deepSearchResults.unionName}</CardDescription>
+            <CardDescription>
+              Detailed information for {deepSearchResults.unionName}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
@@ -487,7 +482,10 @@ export const WebScraper = () => {
                 <Label>Sources:</Label>
                 <div className="space-y-1">
                   {deepSearchResults.sources.map((source, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-sm">
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 text-sm"
+                    >
                       <ExternalLink className="w-3 h-3" />
                       <a
                         href={source.url}
@@ -513,7 +511,9 @@ export const WebScraper = () => {
             <Globe className="w-5 h-5" />
             <span>Web Search Capabilities</span>
           </CardTitle>
-          <CardDescription>Powered by OpenAI's web search with real-time data</CardDescription>
+          <CardDescription>
+            Powered by OpenAI's web search with real-time data
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -539,5 +539,5 @@ export const WebScraper = () => {
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
