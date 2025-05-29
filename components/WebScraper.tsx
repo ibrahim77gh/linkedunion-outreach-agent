@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -20,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Globe, Search, Users, Building, ExternalLink } from "lucide-react";
+import { Globe, Search, Users, Building } from "lucide-react";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { UnionDataTable } from "@/components/union-data-table";
 import type { Union } from "@/lib/supabase";
@@ -109,12 +108,13 @@ export const WebScraper = () => {
       } else {
         throw new Error(data.error);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast({
         title: "Search Failed",
         description: "Unable to search for unions. Please try again.",
         variant: "destructive",
       });
+      console.error("Union search error:", error);
     } finally {
       setIsSearchingUnions(false);
     }
@@ -177,6 +177,7 @@ export const WebScraper = () => {
         description: "Unable to perform deep search. Please try again.",
         variant: "destructive",
       });
+      console.error("Union search error:", error);
     } finally {
       setIsDeepSearching(false);
     }
@@ -219,6 +220,7 @@ export const WebScraper = () => {
         description: "Unable to parse and save union data. Please try again.",
         variant: "destructive",
       });
+      console.error("Union search error:", error);
     } finally {
       setIsParsing(false);
     }
@@ -490,7 +492,7 @@ export const WebScraper = () => {
             <span>Web Search Capabilities</span>
           </CardTitle>
           <CardDescription>
-            Powered by OpenAI's web search with real-time data
+            Powered by OpenAI&apos;s web search with real-time data
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

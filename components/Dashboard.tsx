@@ -7,10 +7,8 @@ import {
   Globe, 
   Users, 
   Mail, 
-  CheckCircle, 
   Clock, 
   TrendingUp, 
-  AlertCircle,
   ArrowRight 
 } from "lucide-react";
 

@@ -32,7 +32,7 @@ export interface Union {
 export interface SearchResult {
   id?: string
   search_type: "location" | "deep"
-  search_params: Record<string, any>
+  search_params: Record<string, unknown>
   raw_results: string
   sources: Array<{ url: string; title?: string }>
   unions_found: number
