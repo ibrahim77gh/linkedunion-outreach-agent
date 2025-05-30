@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
       - Executive board members
       - Local representatives
       - Contact information for key personnel
+      - Email of the representatives
       
       DIGITAL PRESENCE:
       - Official website
