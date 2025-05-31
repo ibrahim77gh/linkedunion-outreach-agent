@@ -19,16 +19,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Globe, Search, Users, Building } from "lucide-react";
+import { Globe, Search, Users, Building, ExternalLink } from "lucide-react";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { UnionDataTable } from "@/components/union-data-table";
 import type { Union } from "@/lib/supabase";
-
+import axios from 'axios'; 
+import { Textarea } from "./ui/textarea";
 export interface SearchResult {
   results: string;
   sources: Array<{ url: string; title?: string }>;
   searchQuery: string;
   unionName?: string;
+}
+
+interface Lead {
+  name: string;
+  email_address: string;
+  company_name?: string;
+  phone_number?: string;
+  website_url?: string;
+}
+
+interface ZohoResponse {
+  successfulLeadsCount: number;
+  failedLeadsCount: number;
+  failedDetails: any[];
+  message: string;
+  zohoApiResponse: any;
 }
 
 export const WebScraper = () => {
@@ -43,12 +60,15 @@ export const WebScraper = () => {
   const [unionSearchResults, setUnionSearchResults] =
     useState<SearchResult | null>(null);
 
+  // console.log(unionSearchResults.results,'unionSearchResults')
   // Deep Search State
   const [unionName, setUnionName] = useState("");
   const [unionWebsite, setUnionWebsite] = useState("");
   const [isDeepSearching, setIsDeepSearching] = useState(false);
   const [deepSearchResults, setDeepSearchResults] =
     useState<SearchResult | null>(null);
+
+  // console.log(deepSearchResults.results,'deepSearchResults')
 
   const [searchProgress, setSearchProgress] = useState(0);
 
@@ -295,9 +315,80 @@ export const WebScraper = () => {
     "Yukon",
   ];
 
+  const handleClick = () => {
+    window.open('/api/zoho/initiate-auth', '_blank');
+  };
+
+  const [syncStatus, setSyncStatus] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [leadsToSync, setLeadsToSync] = useState<Lead[]>([
+    { name: 'John Doe', email_address: 'john.doe@example.com', company_name: 'Acme Corp', phone_number: '123-456-7890', website_url: 'acmecorp.com' },
+    { name: 'Jane Smith', email_address: 'jane.smith@another.com', company_name: 'Global Solutions', phone_number: '098-765-4321', website_url: 'globalsolutions.net' },
+  ]);
+  const handleSyncLeadsToZoho = async () => {
+    setSyncStatus('Syncing leads...');
+    setError(null);
+
+    try {
+      const response = await axios.post<ZohoResponse>('/api/zoho/add-lead', { leads: leadsToSync });
+
+      if (response.status === 200) {
+        const data = response.data;
+        setSyncStatus(`Sync complete! Successful: ${data.successfulLeadsCount}, Failed: ${data.failedLeadsCount}. Check console for details.`);
+        console.log('Zoho Sync Response:', data);
+
+        // Show success toast notification
+        toast({
+          title: "Sync Successful",
+          description: (
+            <div>
+              <p>{data.successfulLeadsCount} leads synced to Zoho successfully!</p>
+              <a
+                href="https://www.zoho.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                Visit Zoho
+              </a>
+            </div>
+          ),
+        });
+      } else {
+        setSyncStatus('Sync failed with unexpected status.');
+        setError(response.data.message || 'Unknown error');
+        toast({
+          title: "Sync Failed",
+          description: response.data.message || 'Unknown error occurred',
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      console.error('Error sending leads to Next.js API:', err.response ? err.response.data : err.message);
+      setSyncStatus('Sync failed!');
+      setError(err.response?.data?.message || err.message);
+      toast({
+        title: "Sync Failed",
+        description: err.response?.data?.message || err.message,
+        variant: "destructive",
+      });
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Union Search Interface */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Button
+          onClick={handleClick}
+          className="flex items-center space-x-2 w-[50%]"
+        >
+          <span>
+            {"CONNECT TO ZOHO"}
+          </span>
+        </Button>
+      </div>
+
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -462,26 +553,62 @@ export const WebScraper = () => {
       )}
 
       {deepSearchResults && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Building className="w-5 h-5" />
-              <span>Deep Search Results</span>
-            </CardTitle>
-            <CardDescription>
-              Detailed information for {deepSearchResults.unionName}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <MarkdownRenderer
-              handleParseAndSave={handleParseAndSave}
-              unionSearchResults={deepSearchResults}
-              content={deepSearchResults.results}
-              isParsing={isParsing}
-              className="h-fit"
-            />
-          </CardContent>
-        </Card>
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Building className="w-5 h-5" />
+                <span>Deep Search Results</span>
+              </CardTitle>
+              <CardDescription>
+                Detailed information for {deepSearchResults.unionName}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Textarea
+                value={deepSearchResults.results}
+                readOnly
+                className="min-h-[400px] font-mono text-sm"
+                placeholder="Deep search results will appear here..."
+              />
+              {deepSearchResults.sources.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Sources:</Label>
+                  <div className="space-y-1">
+                    {deepSearchResults.sources.map((source, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 text-sm"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <a
+                          href={source.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {source.title || source.url}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Button
+              onClick={handleSyncLeadsToZoho}
+              className="flex items-center space-x-2 w-[50%]"
+              disabled={syncStatus === 'Syncing leads...'}
+            >
+              <span>
+                Sync Leads to Zoho
+              </span>
+            </Button>
+          </div>
+          {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+        </>
       )}
 
       {/* Search Info */}
