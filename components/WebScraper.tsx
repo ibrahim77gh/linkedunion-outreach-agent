@@ -19,11 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Globe, Search, Users, Building } from "lucide-react";
+import { Globe, Search, Users, Building, ExternalLink } from "lucide-react";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { UnionDataTable } from "@/components/union-data-table";
 import type { Union } from "@/lib/supabase";
 import axios from 'axios'; 
+import { Textarea } from "./ui/textarea";
 export interface SearchResult {
   results: string;
   sources: Array<{ url: string; title?: string }>;
