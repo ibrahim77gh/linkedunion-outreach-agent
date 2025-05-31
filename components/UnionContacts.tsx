@@ -99,8 +99,8 @@ export const UnionContacts = () => {
         const errorData = await response.json();
         setError(`Failed to start campaign: ${errorData.message || response.statusText}`);
       }
-    } catch (err: any) {
-      setError(`Network error or problem sending data: ${err.message}`);
+    } catch (err: unknown) {
+      setError(`Network error or problem sending data: ${String(err)}`);
     } finally {
       setIsLoading(false);
     }

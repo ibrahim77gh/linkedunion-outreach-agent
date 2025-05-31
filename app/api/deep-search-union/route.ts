@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(req: NextRequest) {
   try {
-    const { unionName, website } = await req.json()
+    const { unionName } = await req.json()
 
     const searchQuery = `${unionName} union contact information leadership representatives social media`
 
@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
       - Executive board members
       - Local representatives
       - Contact information for key personnel
+      - Email of the representatives
       
       DIGITAL PRESENCE:
       - Official website

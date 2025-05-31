@@ -11,7 +11,6 @@ import {
   Mail, 
   Copy, 
   Edit, 
-  Send,
   Users,
   Building,
   HandHeart,
