@@ -1,85 +1,161 @@
+'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { 
-  Globe, 
-  Users, 
-  Mail, 
-  Clock, 
-  TrendingUp, 
-  ArrowRight 
+import {
+  Globe,
+  Users,
+  Mail,
+  Clock,
+  TrendingUp,
+  ArrowRight,
+  Database,
+  RefreshCw,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 
+interface DashboardStats {
+  totalUnions: number;
+  totalLeads: number;
+  syncedLeads: number;
+  totalSearches: number;
+  unionsGrowth: number;
+  leadsGrowth: number;
+  syncRate: number;
+  zohoConnected: boolean;
+  zohoTotalLeads: number;
+  recentActivity: Array<{
+    action: string;
+    target: string;
+    status: string;
+    time: string;
+    id: string;
+  }>;
+}
+
 export const Dashboard = () => {
-  const stats = [
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/dashboard/stats');
+      const result = await response.json();
+      
+      if (result.success) {
+        setStats(result.data);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch dashboard stats');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleZohoConnect = () => {
+    window.open('/api/zoho/initiate-auth', '_blank');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-2 text-lg text-slate-700">Loading dashboard...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <AlertCircle className="h-12 w-12 text-red-500" />
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-slate-900">Error Loading Dashboard</h3>
+          <p className="text-slate-600 mt-1">{error}</p>
+          <Button onClick={fetchDashboardStats} className="mt-4">
+            <ArrowRight className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
+
+  const dashboardStats = [
     {
-      title: "Websites Scraped",
-      value: "1,247",
-      change: "+12%",
-      icon: Globe,
+      title: "Total Unions",
+      value: stats.totalUnions.toLocaleString(),
+      change: `+${stats.unionsGrowth}%`,
+      icon: Users,
       color: "blue"
     },
     {
-      title: "Union Contacts Found",
-      value: "3,891",
-      change: "+8%",
-      icon: Users,
+      title: "Total Leads",
+      value: stats.totalLeads.toLocaleString(),
+      change: `+${stats.leadsGrowth}%`,
+      icon: Database,
       color: "green"
     },
     {
-      title: "Emails Sent",
-      value: "2,156",
-      change: "+24%",
-      icon: Mail,
+      title: "Synced to Zoho",
+      value: stats.syncedLeads.toLocaleString(),
+      change: `${stats.syncRate}% sync rate`,
+      icon: RefreshCw,
       color: "purple"
     },
     {
-      title: "Response Rate",
-      value: "18.2%",
-      change: "+3%",
-      icon: TrendingUp,
+      title: "Website Searches",
+      value: stats.totalSearches.toLocaleString(),
+      change: "Total searches",
+      icon: Globe,
       color: "orange"
-    }
-  ];
-
-  const recentActivity = [
-    {
-      action: "Website scraped",
-      target: "teamsters.org",
-      status: "completed",
-      time: "2 min ago",
-      contacts: 47
-    },
-    {
-      action: "Email campaign",
-      target: "Northeast Union Outreach",
-      status: "in-progress",
-      time: "5 min ago",
-      contacts: 156
-    },
-    {
-      action: "Contact verification",
-      target: "SEIU Local 1199",
-      status: "completed",
-      time: "12 min ago",
-      contacts: 23
-    },
-    {
-      action: "Website scraped",
-      target: "afscme.org",
-      status: "failed",
-      time: "18 min ago",
-      contacts: 0
     }
   ];
 
   return (
     <div className="space-y-6">
+      {/* Zoho Connection Status */}
+      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+        <div className="flex items-center space-x-3">
+          <div className={`w-3 h-3 rounded-full ${stats.zohoConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          <div>
+            <h3 className="font-semibold text-slate-900">
+              Zoho CRM {stats.zohoConnected ? 'Connected' : 'Not Connected'}
+            </h3>
+            <p className="text-sm text-slate-600">
+              {stats.zohoConnected 
+                ? `${stats.syncedLeads.toLocaleString()} leads in Zoho CRM`
+                : 'Connect to sync leads with Zoho CRM'
+              }
+            </p>
+          </div>
+        </div>
+        {!stats.zohoConnected && (
+          <Button onClick={handleZohoConnect} className="flex items-center space-x-2">
+            <RefreshCw className="w-4 h-4" />
+            <span>Connect to Zoho</span>
+          </Button>
+        )}
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
+        {dashboardStats.map((stat, index) => (
           <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-slate-600">
@@ -89,9 +165,15 @@ export const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-              <div className="flex items-center space-x-1 text-xs text-green-600 mt-1">
-                <TrendingUp className="w-3 h-3" />
-                <span>{stat.change} from last month</span>
+              <div className="flex items-center space-x-1 text-xs text-slate-600 mt-1">
+                {stat.title === "Synced to Zoho" ? (
+                  <span>{stat.change}</span>
+                ) : (
+                  <>
+                    <TrendingUp className="w-3 h-3 text-green-600" />
+                    <span className="text-green-600">{stat.change}</span>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -107,93 +189,93 @@ export const Dashboard = () => {
               <span>Recent Activity</span>
             </CardTitle>
             <CardDescription>
-              Latest scraping and campaign activities
+              Latest leads and sync activities
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${
-                    activity.status === 'completed' ? 'bg-green-500' : 
-                    activity.status === 'in-progress' ? 'bg-blue-500' : 'bg-red-500'
-                  }`}></div>
-                  <div>
-                    <div className="font-medium text-sm text-slate-900">
-                      {activity.action}
-                    </div>
-                    <div className="text-xs text-slate-600">
-                      {activity.target} • {activity.time}
+            {stats.recentActivity.length > 0 ? (
+              stats.recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-2 h-2 rounded-full ${
+                      activity.status === 'completed' ? 'bg-green-500' :
+                      activity.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}></div>
+                    <div>
+                      <div className="font-medium text-sm text-slate-900">
+                        {activity.action}
+                      </div>
+                      <div className="text-xs text-slate-600">
+                        {activity.target} • {activity.time}
+                      </div>
                     </div>
                   </div>
+                  <div className="text-right">
+                    <Badge
+                      variant={activity.status === 'completed' ? 'default' :
+                        activity.status === 'pending' ? 'secondary' : 'destructive'}
+                      className="text-xs"
+                    >
+                      {activity.status}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <Badge 
-                    variant={activity.status === 'completed' ? 'default' : 
-                            activity.status === 'in-progress' ? 'secondary' : 'destructive'}
-                    className="text-xs"
-                  >
-                    {activity.status}
-                  </Badge>
-                  {activity.contacts > 0 && (
-                    <div className="text-xs text-slate-600 mt-1">
-                      {activity.contacts} contacts
-                    </div>
-                  )}
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-slate-500">
+                No recent activity found
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
-        {/* Campaign Performance */}
+        {/* Sync Performance */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Mail className="w-5 h-5" />
-              <span>Campaign Performance</span>
+              <RefreshCw className="w-5 h-5" />
+              <span>Sync Performance</span>
             </CardTitle>
             <CardDescription>
-              Active email campaigns and their metrics
+              Lead synchronization with Zoho CRM
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="font-medium text-sm">Northeast Union Outreach</div>
-                  <div className="text-xs text-slate-600">156 contacts • Started 2 days ago</div>
+                  <div className="font-medium text-sm">Leads Synced</div>
+                  <div className="text-xs text-slate-600">
+                    {stats.syncedLeads} of {stats.totalLeads} total leads
+                  </div>
                 </div>
-                <Badge className="bg-blue-100 text-blue-700">Active</Badge>
+                <Badge className={`${
+                  stats.syncRate > 80 ? 'bg-green-100 text-green-700' :
+                  stats.syncRate > 50 ? 'bg-yellow-100 text-yellow-700' :
+                  'bg-red-100 text-red-700'
+                }`}>
+                  {stats.syncRate}%
+                </Badge>
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span>Sent: 89/156</span>
-                  <span>57%</span>
-                </div>
-                <Progress value={57} className="h-2" />
-              </div>
+              <Progress value={stats.syncRate} className="h-2" />
             </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <div>
-                  <div className="font-medium text-sm">West Coast Labor Initiative</div>
-                  <div className="text-xs text-slate-600">203 contacts • Completed 1 week ago</div>
+            {stats.zohoConnected && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-medium text-sm">Zoho CRM Integration</div>
+                    <div className="text-xs text-slate-600">
+                      {stats.zohoTotalLeads} leads in Zoho CRM
+                    </div>
+                  </div>
+                  <Badge className="bg-green-100 text-green-700">Active</Badge>
                 </div>
-                <Badge variant="secondary">Completed</Badge>
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span>Response Rate: 18.2%</span>
-                  <span className="text-green-600">+3% above avg</span>
-                </div>
-                <Progress value={18} className="h-2" />
-              </div>
-            </div>
+            )}
 
-            <Button className="w-full mt-4" variant="outline">
-              View All Campaigns
+            <Button className="w-full mt-4" variant="outline" onClick={() => window.location.href = '/unions'}>
+              View All Unions
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </CardContent>
@@ -210,17 +292,29 @@ export const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button className="flex items-center space-x-2 h-12">
+            <Button 
+              className="flex items-center space-x-2 h-12"
+              onClick={() => window.location.href = '/scraper'}
+            >
               <Globe className="w-5 h-5" />
-              <span>Scrape New Website</span>
+              <span>Search New Unions</span>
             </Button>
-            <Button variant="outline" className="flex items-center space-x-2 h-12">
+            <Button 
+              variant="outline" 
+              className="flex items-center space-x-2 h-12"
+              onClick={() => window.location.href = '/unions'}
+            >
               <Users className="w-5 h-5" />
-              <span>Verify Contacts</span>
+              <span>View All Unions</span>
             </Button>
-            <Button variant="outline" className="flex items-center space-x-2 h-12">
+            <Button 
+              variant="outline" 
+              className="flex items-center space-x-2 h-12"
+              onClick={handleZohoConnect}
+              disabled={stats.zohoConnected}
+            >
               <Mail className="w-5 h-5" />
-              <span>Create Campaign</span>
+              <span>{stats.zohoConnected ? 'Zoho Connected' : 'Connect Zoho'}</span>
             </Button>
           </div>
         </CardContent>
