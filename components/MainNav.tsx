@@ -1,10 +1,10 @@
-'use client'; // This component MUST be a client component
+'use client';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Users, Globe, Search, Mail, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
-import clsx from 'clsx'; // Make sure you have clsx installed: npm install clsx or yarn add clsx
+import clsx from 'clsx';  
 
 export const MainNav = () => {
   const pathname = usePathname(); // Get the current path to highlight active tab
@@ -13,13 +13,13 @@ export const MainNav = () => {
     <>
       {/* Header */}
       <header className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Users className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-slate-900">LinkedUnion</h1>
+              <h1 className="text-xl font-bold text-slate-900">LinkedUnion Outreach Agent</h1>
               <Badge variant="secondary" className="text-xs">AI-Powered</Badge>
             </div>
             <div className="flex items-center space-x-4">
@@ -33,10 +33,10 @@ export const MainNav = () => {
       </header>
 
       {/* Main Content Area with Header and Description (also part of the client component now for simplicity) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-slate-900 mb-2">
-            Union Lead Generation Hub
+            LinkedUnion Outreach Agent
           </h2>
           <p className="text-slate-600 max-w-2xl">
             Automate your union outreach with AI-powered website scraping, contact verification,

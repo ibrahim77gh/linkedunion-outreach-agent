@@ -7,7 +7,7 @@ import { Lead } from "@/lib/supabase"; // Assuming Lead interface is defined her
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, RefreshCw } from "lucide-react";
+import { Loader2, ArrowLeft, RefreshCw, Download } from "lucide-react";
 
 import { LeadsTable } from "@/components/leads-table/leads-table";
 import { leadsColumns } from "@/components/leads-table/columns";
@@ -36,6 +36,7 @@ const UnionLeadsPage = ({ params }: UnionLeadsPageProps) => {
     const router = useRouter();
 
     const [syncingToZoho, setSyncingToZoho] = useState(false); // State for sync button loading
+    const [downloadingCSV, setDownloadingCSV] = useState(false); // State for download CSV button loading
 
     const fetchLeads = useCallback(async () => {
         if (!unionId) {
@@ -126,6 +127,73 @@ const UnionLeadsPage = ({ params }: UnionLeadsPageProps) => {
         }
     };
 
+    const handleDownloadCSV = async () => {
+        if (leads.length === 0) {
+            toast({
+                title: "No leads to download",
+                description: "There are no leads to export as CSV.",
+                variant: "default",
+            });
+            return;
+        }
+
+        setDownloadingCSV(true);
+        try {
+            // Get all leads for CSV export (not just the current page)
+            const params = new URLSearchParams({
+                unionId: unionId,
+                page: '1',
+                pageSize: totalItems.toString(),
+                search: search,
+            });
+
+            const response = await fetch(`/api/leads?${params.toString()}`);
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || "Failed to fetch leads for CSV export.");
+            }
+
+            const allLeads = result.data;
+
+            // Prepare CSV content
+            const headers = Object.keys(allLeads[0]).join(',');
+            const rows = allLeads.map((lead: any) => 
+                Object.values(lead).map(value => 
+                    typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value
+                ).join(',')
+            ).join('\n');
+
+            const csvContent = `${headers}\n${rows}`;
+
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `leads_union_${unionId}_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            toast({
+                title: "Download successful",
+                description: "Leads have been exported as CSV.",
+                variant: "default",
+            });
+        } catch (error: any) {
+            console.error("Error downloading CSV:", error);
+            toast({
+                title: "Download failed",
+                description: error.message || "Failed to export leads as CSV.",
+                variant: "destructive",
+            });
+        } finally {
+            setDownloadingCSV(false);
+        }
+    };
+
     useEffect(() => {
         fetchLeads();
     }, [fetchLeads]);
@@ -171,18 +239,35 @@ const UnionLeadsPage = ({ params }: UnionLeadsPageProps) => {
             <Button variant="outline" onClick={() => router.push(`/unions/${unionId}`)}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to Union Details
             </Button>
-            <Button
-                onClick={handleSyncLeadsToZoho}
-                className="flex items-center space-x-2 w-fit"
-                disabled={syncingToZoho || leads.filter(lead => !lead.zoho_crm_lead_id).length === 0}
-            >
-                {syncingToZoho ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                )}
-                <span>Sync Unsynced Leads to Zoho ({leads.filter(lead => !lead.zoho_crm_lead_id).length})</span>
-            </Button>
+            
+            <div className="flex gap-2">
+                <Button
+                    onClick={handleSyncLeadsToZoho}
+                    className="flex items-center space-x-2 w-fit"
+                    disabled={syncingToZoho || leads.filter(lead => !lead.zoho_crm_lead_id).length === 0}
+                >
+                    {syncingToZoho ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                    )}
+                    <span>Sync Unsynced Leads to Zoho ({leads.filter(lead => !lead.zoho_crm_lead_id).length})</span>
+                </Button>
+
+                <Button
+                    onClick={handleDownloadCSV}
+                    className="flex items-center space-x-2 w-fit"
+                    disabled={downloadingCSV || leads.length === 0}
+                    variant="outline"
+                >
+                    {downloadingCSV ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Download className="mr-2 h-4 w-4" />
+                    )}
+                    <span>Download as CSV</span>
+                </Button>
+            </div>
 
             <Card>
                 <CardHeader>

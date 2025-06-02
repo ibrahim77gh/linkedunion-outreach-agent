@@ -29,13 +29,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-    Select, // Import Select
-    SelectContent, // Import SelectContent
-    SelectItem, // Import SelectItem
-    SelectTrigger, // Import SelectTrigger
-    SelectValue, // Import SelectValue
-} from "@/components/ui/select"; // Assuming this path for shadcn/ui select components
-import { Loader2, MoreHorizontal } from "lucide-react";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Loader2, MoreHorizontal, Download } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -103,13 +103,47 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  const downloadCSV = () => {
+    // Get visible columns
+    const visibleColumns = table.getAllLeafColumns()
+      .filter(column => column.getIsVisible())
+      .map(column => column.id);
+
+    // Create CSV headers
+    const headers = visibleColumns.join(',') + '\n';
+
+    // Create CSV rows
+    const rows = data.map(row => {
+      return visibleColumns.map(columnId => {
+        // @ts-ignore - We know the data exists
+        const cellValue = row[columnId];
+        // Escape quotes and wrap in quotes if contains commas
+        const escapedValue = String(cellValue ?? '').replace(/"/g, '""');
+        return escapedValue.includes(',') ? `"${escapedValue}"` : escapedValue;
+      }).join(',');
+    }).join('\n');
+
+    // Combine headers and rows
+    const csvContent = headers + rows;
+
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'unions.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="rounded-md border">
       <div className="flex items-center py-4 px-4">
         <div className="relative flex-grow max-w-sm">
           <Input
             placeholder="Search by union name..."
-            value={currentSearchValue}
             onChange={(event) => {
               onSearchChange(event.target.value);
             }}
@@ -121,32 +155,44 @@ export function DataTable<TData, TValue>({
           )}
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <MoreHorizontal className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex space-x-2 ml-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadCSV}
+            disabled={loading || data.length === 0}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Columns <MoreHorizontal className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       <Table>
         <TableHeader>
@@ -203,13 +249,13 @@ export function DataTable<TData, TValue>({
         </div>
 
         <div className="flex items-center space-x-6 lg:space-x-8">
-            {/* Page Size Selector (Optional, but good to include if you want this control) */}
+            {/* Page Size Selector */}
             <div className="flex items-center space-x-2">
                 <p className="text-sm font-medium">Rows per page</p>
                 <Select
                     value={`${pageSize}`}
                     onValueChange={(value) => {
-                        onPaginationChange({ pageIndex: 0, pageSize: Number(value) }); // Reset to first page
+                        onPaginationChange({ pageIndex: 0, pageSize: Number(value) });
                     }}
                 >
                     <SelectTrigger className="h-8 w-[70px]">
@@ -229,11 +275,11 @@ export function DataTable<TData, TValue>({
             <div className="flex w-[100px] items-center justify-center text-sm font-medium">
                 Page {pageIndex + 1} of {totalPages}
             </div>
-            {totalPages > 0 && ( // Only show dropdown if there are pages
+            {totalPages > 0 && (
                 <Select
-                    value={`${pageIndex + 1}`} // Current page (1-indexed)
+                    value={`${pageIndex + 1}`}
                     onValueChange={(value) => {
-                        onPaginationChange({ pageIndex: Number(value) - 1, pageSize }); // Convert back to 0-indexed
+                        onPaginationChange({ pageIndex: Number(value) - 1, pageSize });
                     }}
                 >
                     <SelectTrigger className="h-8 w-[70px]">
