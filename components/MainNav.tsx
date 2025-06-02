@@ -12,18 +12,16 @@ export const MainNav = () => {
   return (
     <>
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 shadow-sm">
+      <header className="bg-[#1A66B0] border-b border-slate-200 shadow-sm">
         <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-slate-900">LinkedUnion Outreach Agent</h1>
-              <Badge variant="secondary" className="text-xs">AI-Powered</Badge>
+               
+              <img src="https://linkedunion.com/_next/image?url=%2Fimages%2Flogo%2Flogo.webp&w=3840&q=75" className="h-[30px] w-[100%]" alt="" />
+              
             </div>
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-slate-600">
+              <div className="text-sm text-white">
                 Last sync: <span className="font-medium">2 min ago</span>
               </div>
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
