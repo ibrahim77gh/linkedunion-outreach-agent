@@ -1,12 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
+export async function GET() {
   try {
-    // Fetch data from Supabase
     const { data, error } = await supabase
       .from("zoho_tokens")
       .select("*")
@@ -14,9 +9,14 @@ export default async function handler(req: any, res: any) {
 
     if (error) throw error;
 
-    return res.status(200).json(data);
+    return Response.json(data);
   } catch (error: any) {
     console.error("Error fetching Zoho tokens:", error);
-    return res.status(500).json({ error: error.message });
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 }

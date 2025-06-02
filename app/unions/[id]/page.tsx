@@ -22,13 +22,9 @@ import {
 import { LeadsTable } from "@/components/leads-table/leads-table";
 import { leadsColumns } from "@/components/leads-table/columns";
 
-interface UnionDetailPageProps {
-    params: {
-        id: string; // The ID from the URL segment
-    };
-}
+ 
 
-const UnionDetailPage = ({ params }: UnionDetailPageProps) => {
+const UnionDetailPage = ({ params }: any) => {
     const { id } = params;
     const [union, setUnion] = useState<Union | null>(null);
     const [loading, setLoading] = useState(true);
